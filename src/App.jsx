@@ -33,7 +33,9 @@ function App() {
   const [applications, setApplications] = useState([]);
   const [view, setView] = useState('dashboard'); // dashboard, kanban, list
   const [showModal, setShowModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [editingApp, setEditingApp] = useState(null);
+  const [viewingApp, setViewingApp] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStage, setFilterStage] = useState('all');
 
@@ -79,6 +81,11 @@ function App() {
 
   const moveToStage = (id, newStage) => {
     updateApplication(id, { stage: newStage });
+  };
+
+  const viewApplication = (app) => {
+    setViewingApp(app);
+    setShowDetailModal(true);
   };
 
   const exportData = () => {
@@ -225,13 +232,14 @@ function App() {
         )}
 
         {/* Dashboard View */}
-        {view === 'dashboard' && <Dashboard stats={stats} applications={applications} />}
+        {view === 'dashboard' && <Dashboard stats={stats} applications={applications} onView={viewApplication} />}
 
         {/* Kanban View */}
         {view === 'kanban' && (
           <KanbanBoard
             applications={filteredApps}
             moveToStage={moveToStage}
+            onView={viewApplication}
             onEdit={(app) => {
               setEditingApp(app);
               setShowModal(true);
@@ -244,6 +252,7 @@ function App() {
         {view === 'list' && (
           <ListView
             applications={filteredApps}
+            onView={viewApplication}
             onEdit={(app) => {
               setEditingApp(app);
               setShowModal(true);
@@ -266,7 +275,7 @@ function App() {
         </div>
       </footer>
 
-      {/* Modal */}
+      {/* Edit/Add Modal */}
       {showModal && (
         <ApplicationModal
           application={editingApp}
@@ -277,12 +286,28 @@ function App() {
           }}
         />
       )}
+
+      {/* Detail View Modal */}
+      {showDetailModal && viewingApp && (
+        <DetailModal
+          application={viewingApp}
+          onClose={() => {
+            setShowDetailModal(false);
+            setViewingApp(null);
+          }}
+          onEdit={() => {
+            setShowDetailModal(false);
+            setEditingApp(viewingApp);
+            setShowModal(true);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 // Dashboard Component
-function Dashboard({ stats, applications }) {
+function Dashboard({ stats, applications, onView }) {
   const recentApps = [...applications]
     .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
     .slice(0, 5);
@@ -318,7 +343,11 @@ function Dashboard({ stats, applications }) {
         ) : (
           <div className="space-y-3">
             {recentApps.map(app => (
-              <div key={app.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div
+                key={app.id}
+                onClick={() => onView(app)}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+              >
                 <div>
                   <h3 className="font-medium">{app.company}</h3>
                   <p className="text-sm text-gray-600">{app.role}</p>
@@ -373,7 +402,7 @@ function PipelineCard({ label, count, color }) {
 }
 
 // Kanban Board Component
-function KanbanBoard({ applications, moveToStage, onEdit, onDelete }) {
+function KanbanBoard({ applications, moveToStage, onView, onEdit, onDelete }) {
   const [draggedApp, setDraggedApp] = useState(null);
 
   const handleDragStart = (app) => {
@@ -416,25 +445,42 @@ function KanbanBoard({ applications, moveToStage, onEdit, onDelete }) {
                   onDragStart={() => handleDragStart(app)}
                   className="bg-white rounded-lg p-3 shadow-sm cursor-move hover:shadow-md transition-shadow"
                 >
-                  <h4 className="font-medium text-sm">{app.company}</h4>
-                  <p className="text-xs text-gray-600 mt-1">{app.role}</p>
-                  {app.location && (
-                    <p className="text-xs text-gray-500 mt-1">📍 {app.location}</p>
-                  )}
-                  {app.appliedDate && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(app.appliedDate).toLocaleDateString('en-GB')}
-                    </p>
-                  )}
+                  <div onClick={() => onView(app)} className="cursor-pointer">
+                    <h4 className="font-medium text-sm hover:text-blue-600">{app.company}</h4>
+                    <p className="text-xs text-gray-600 mt-1">{app.role}</p>
+                    {app.location && (
+                      <p className="text-xs text-gray-500 mt-1">📍 {app.location}</p>
+                    )}
+                    {app.appliedDate && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(app.appliedDate).toLocaleDateString('en-GB')}
+                      </p>
+                    )}
+                  </div>
                   <div className="flex gap-2 mt-2">
                     <button
-                      onClick={() => onEdit(app)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onView(app);
+                      }}
+                      className="text-xs text-gray-600 hover:text-gray-800"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(app);
+                      }}
                       className="text-xs text-blue-600 hover:text-blue-800"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => onDelete(app.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(app.id);
+                      }}
                       className="text-xs text-red-600 hover:text-red-800"
                     >
                       Delete
@@ -450,7 +496,7 @@ function KanbanBoard({ applications, moveToStage, onEdit, onDelete }) {
 }
 
 // List View Component
-function ListView({ applications, onEdit, onDelete, moveToStage }) {
+function ListView({ applications, onView, onEdit, onDelete, moveToStage }) {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       {applications.length === 0 ? (
@@ -469,14 +515,14 @@ function ListView({ applications, onEdit, onDelete, moveToStage }) {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {applications.map(app => (
-              <tr key={app.id} className="hover:bg-gray-50">
+              <tr key={app.id} onClick={() => onView(app)} className="hover:bg-gray-50 cursor-pointer">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="font-medium text-gray-900">{app.company}</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm text-gray-900">{app.role}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                   <select
                     value={app.stage}
                     onChange={(e) => moveToStage(app.id, e.target.value)}
@@ -493,7 +539,13 @@ function ListView({ applications, onEdit, onDelete, moveToStage }) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {app.location || '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => onView(app)}
+                    className="text-gray-600 hover:text-gray-900 mr-3"
+                  >
+                    View
+                  </button>
                   <button
                     onClick={() => onEdit(app)}
                     className="text-blue-600 hover:text-blue-900 mr-3"
@@ -528,6 +580,9 @@ function ApplicationModal({ application, onSave, onClose }) {
     salaryRange: '',
     jobUrl: '',
     contact: '',
+    jobDescription: '',
+    questionsAsked: '',
+    myQuestions: '',
     notes: ''
   });
 
@@ -689,6 +744,48 @@ function ApplicationModal({ application, onSave, onClose }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Job Description
+              </label>
+              <textarea
+                name="jobDescription"
+                rows="6"
+                placeholder="Paste the full job description here..."
+                value={formData.jobDescription}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Interview Questions They Asked
+              </label>
+              <textarea
+                name="questionsAsked"
+                rows="4"
+                placeholder="Record questions they asked during interviews..."
+                value={formData.questionsAsked}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                My Questions to Ask
+              </label>
+              <textarea
+                name="myQuestions"
+                rows="4"
+                placeholder="Questions you want to ask them..."
+                value={formData.myQuestions}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Notes
               </label>
               <textarea
@@ -717,6 +814,161 @@ function ApplicationModal({ application, onSave, onClose }) {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Detail View Modal Component
+function DetailModal({ application, onClose, onEdit }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex justify-between items-start mb-6 border-b pb-4">
+            <div className="flex-1">
+              <h2 className="text-3xl font-bold text-gray-900">{application.company}</h2>
+              <p className="text-lg text-gray-600 mt-1">{application.role}</p>
+              <div className="flex gap-3 mt-3">
+                <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStageBadgeColor(application.stage)}`}>
+                  {STAGE_LABELS[application.stage]}
+                </span>
+                {application.location && (
+                  <span className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full">
+                    📍 {application.location}
+                  </span>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl ml-4"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Content Grid */}
+          <div className="space-y-6">
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {application.appliedDate && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Applied Date</h3>
+                  <p className="text-gray-900">{new Date(application.appliedDate).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}</p>
+                </div>
+              )}
+
+              {application.source && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Source</h3>
+                  <p className="text-gray-900">{application.source}</p>
+                </div>
+              )}
+
+              {application.salaryRange && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Salary Range</h3>
+                  <p className="text-gray-900">{application.salaryRange}</p>
+                </div>
+              )}
+
+              {application.contact && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Contact</h3>
+                  <p className="text-gray-900">{application.contact}</p>
+                </div>
+              )}
+            </div>
+
+            {application.jobUrl && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Job URL</h3>
+                <a
+                  href={application.jobUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 hover:underline break-all"
+                >
+                  {application.jobUrl}
+                </a>
+              </div>
+            )}
+
+            {/* Job Description */}
+            {application.jobDescription && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Job Description</h3>
+                <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+                  <p className="text-gray-900 whitespace-pre-wrap">{application.jobDescription}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Questions They Asked */}
+            {application.questionsAsked && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Interview Questions They Asked</h3>
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <p className="text-gray-900 whitespace-pre-wrap">{application.questionsAsked}</p>
+                </div>
+              </div>
+            )}
+
+            {/* My Questions */}
+            {application.myQuestions && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">My Questions to Ask</h3>
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <p className="text-gray-900 whitespace-pre-wrap">{application.myQuestions}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {application.notes && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Notes</h3>
+                <div className="bg-yellow-50 rounded-lg p-4">
+                  <p className="text-gray-900 whitespace-pre-wrap">{application.notes}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Timestamps */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-500 pt-4 border-t">
+              <div>
+                <span className="font-medium">Created:</span>{' '}
+                {new Date(application.createdAt).toLocaleString('en-GB')}
+              </div>
+              <div>
+                <span className="font-medium">Last Updated:</span>{' '}
+                {new Date(application.updatedAt).toLocaleString('en-GB')}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 mt-6 pt-4 border-t">
+            <button
+              onClick={onEdit}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Edit Application
+            </button>
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

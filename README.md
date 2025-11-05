@@ -33,7 +33,12 @@ An intuitive web application for organising and tracking your job search. Visual
   - Salary range
   - Job URL
   - Contact information
+  - **Job description** - Paste full job descriptions for reference
+  - **Interview questions** - Track questions they asked during interviews
+  - **My questions** - Prepare questions to ask them
   - Notes and follow-up actions
+- **Detailed View Modal**: Click any application to see a comprehensive view with all information
+- **Clickable Applications**: Quick access from Dashboard, Kanban, and List views
 - **Local Storage**: All data persists in your browser - no account required
 - **Export Data**: Download your applications as CSV or JSON
 - **Search**: Filter applications by company or role
