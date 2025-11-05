@@ -571,18 +571,56 @@ function ListView({ applications, onView, onEdit, onDelete, moveToStage }) {
 // Application Modal Component
 function ApplicationModal({ application, onSave, onClose }) {
   const [formData, setFormData] = useState(application || {
+    // Company Information
     company: '',
     role: '',
-    stage: STAGES.WISHLIST,
-    appliedDate: '',
-    source: '',
     location: '',
     salaryRange: '',
     jobUrl: '',
-    contact: '',
+    appliedDate: '',
+
+    // Role Details
+    keyResponsibilities: '',
+    requiredSkills: '',
+    whyGoodFit: '',
+
+    // Application Details
+    source: '',
+    cvVersion: '',
+    coverLetter: false,
+    portfolioIncluded: false,
+
+    // Contact Information
+    hiringManager: '',
+    recruiter: '',
+    recruiterContact: '',
+    internalContact: '',
+
+    // Timeline
+    stage: STAGES.WISHLIST,
+    recruiterScreen: '',
+    phoneScreen: '',
+    firstInterview: '',
+    secondInterview: '',
+    finalInterview: '',
+
+    // Interview Prep
+    questionsToAsk: '',
+    technicalTopics: '',
+    portfolioProjects: {
+      gtmGenerator: false,
+      leadScoring: false,
+      abTest: false,
+      customerJourney: false
+    },
+
+    // Full Details
     jobDescription: '',
     questionsAsked: '',
-    myQuestions: '',
+
+    // Notes
+    initialThoughts: '',
+    followUpActions: '',
     notes: ''
   });
 
@@ -592,8 +630,21 @@ function ApplicationModal({ application, onSave, onClose }) {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    if (name.startsWith('portfolio_')) {
+      const projectName = name.replace('portfolio_', '');
+      setFormData(prev => ({
+        ...prev,
+        portfolioProjects: {
+          ...prev.portfolioProjects,
+          [projectName]: checked
+        }
+      }));
+    } else if (type === 'checkbox') {
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   return (
@@ -612,190 +663,515 @@ function ApplicationModal({ application, onSave, onClose }) {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Company *
-                </label>
-                <input
-                  type="text"
-                  name="company"
-                  required
-                  value={formData.company}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Company Information Section */}
+            <div className="border-b pb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company *
+                  </label>
+                  <input
+                    type="text"
+                    name="company"
+                    required
+                    value={formData.company}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role *
-                </label>
-                <input
-                  type="text"
-                  name="role"
-                  required
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Role Title *
+                  </label>
+                  <input
+                    type="text"
+                    name="role"
+                    required
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Stage *
-                </label>
-                <select
-                  name="stage"
-                  value={formData.stage}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {Object.entries(STAGE_LABELS).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
-                </select>
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    placeholder="e.g., London, Remote, Hybrid"
+                    value={formData.location}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Applied Date
-                </label>
-                <input
-                  type="date"
-                  name="appliedDate"
-                  value={formData.appliedDate}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Salary Range
+                  </label>
+                  <input
+                    type="text"
+                    name="salaryRange"
+                    placeholder="e.g., £70-85k"
+                    value={formData.salaryRange}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Source
-                </label>
-                <input
-                  type="text"
-                  name="source"
-                  placeholder="e.g., LinkedIn, Indeed, Referral"
-                  value={formData.source}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  placeholder="e.g., London, Remote, Hybrid"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Salary Range
-                </label>
-                <input
-                  type="text"
-                  name="salaryRange"
-                  placeholder="e.g., £70-85k"
-                  value={formData.salaryRange}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Job URL
-                </label>
-                <input
-                  type="url"
-                  name="jobUrl"
-                  placeholder="https://..."
-                  value={formData.jobUrl}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Job Post URL
+                  </label>
+                  <input
+                    type="url"
+                    name="jobUrl"
+                    placeholder="https://..."
+                    value={formData.jobUrl}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact Information
-              </label>
-              <input
-                type="text"
-                name="contact"
-                placeholder="Recruiter name, email, LinkedIn"
-                value={formData.contact}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+            {/* Role Details Section */}
+            <div className="border-b pb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Role Details</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Key Responsibilities
+                  </label>
+                  <textarea
+                    name="keyResponsibilities"
+                    rows="3"
+                    placeholder="List key responsibilities from the job posting..."
+                    value={formData.keyResponsibilities}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Required Skills
+                  </label>
+                  <textarea
+                    name="requiredSkills"
+                    rows="3"
+                    placeholder="List required skills and qualifications..."
+                    value={formData.requiredSkills}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Why I'm a Good Fit
+                  </label>
+                  <textarea
+                    name="whyGoodFit"
+                    rows="3"
+                    placeholder="Why you're a good fit for this role..."
+                    value={formData.whyGoodFit}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Job Description
-              </label>
-              <textarea
-                name="jobDescription"
-                rows="6"
-                placeholder="Paste the full job description here..."
-                value={formData.jobDescription}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+            {/* Application Details Section */}
+            <div className="border-b pb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Application Date
+                  </label>
+                  <input
+                    type="date"
+                    name="appliedDate"
+                    value={formData.appliedDate}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Stage
+                  </label>
+                  <select
+                    name="stage"
+                    value={formData.stage}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {Object.entries(STAGE_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    How Applied (Source)
+                  </label>
+                  <input
+                    type="text"
+                    name="source"
+                    placeholder="e.g., LinkedIn, Company Website, Referral"
+                    value={formData.source}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    CV Version Used
+                  </label>
+                  <input
+                    type="text"
+                    name="cvVersion"
+                    placeholder="e.g., Standard, Tech-focused"
+                    value={formData.cvVersion}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="coverLetter"
+                    checked={formData.coverLetter}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 block text-sm text-gray-700">
+                    Cover Letter Included
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="portfolioIncluded"
+                    checked={formData.portfolioIncluded}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 block text-sm text-gray-700">
+                    Portfolio Included
+                  </label>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Interview Questions They Asked
-              </label>
-              <textarea
-                name="questionsAsked"
-                rows="4"
-                placeholder="Record questions they asked during interviews..."
-                value={formData.questionsAsked}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+            {/* Contact Information Section */}
+            <div className="border-b pb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hiring Manager
+                  </label>
+                  <input
+                    type="text"
+                    name="hiringManager"
+                    placeholder="Name of hiring manager"
+                    value={formData.hiringManager}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Recruiter
+                  </label>
+                  <input
+                    type="text"
+                    name="recruiter"
+                    placeholder="Recruiter name"
+                    value={formData.recruiter}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Recruiter Contact
+                  </label>
+                  <input
+                    type="text"
+                    name="recruiterContact"
+                    placeholder="Email or LinkedIn URL"
+                    value={formData.recruiterContact}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Internal Contact/Referral
+                  </label>
+                  <input
+                    type="text"
+                    name="internalContact"
+                    placeholder="Internal contact name"
+                    value={formData.internalContact}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                My Questions to Ask
-              </label>
-              <textarea
-                name="myQuestions"
-                rows="4"
-                placeholder="Questions you want to ask them..."
-                value={formData.myQuestions}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+            {/* Timeline Section */}
+            <div className="border-b pb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Interview Timeline</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Recruiter Screen
+                  </label>
+                  <input
+                    type="date"
+                    name="recruiterScreen"
+                    value={formData.recruiterScreen}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Screen
+                  </label>
+                  <input
+                    type="date"
+                    name="phoneScreen"
+                    value={formData.phoneScreen}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    1st Interview
+                  </label>
+                  <input
+                    type="date"
+                    name="firstInterview"
+                    value={formData.firstInterview}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    2nd Interview
+                  </label>
+                  <input
+                    type="date"
+                    name="secondInterview"
+                    value={formData.secondInterview}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Final Interview
+                  </label>
+                  <input
+                    type="date"
+                    name="finalInterview"
+                    value={formData.finalInterview}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
             </div>
 
+            {/* Interview Prep Section */}
+            <div className="border-b pb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Interview Preparation</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Questions to Ask Them
+                  </label>
+                  <textarea
+                    name="questionsToAsk"
+                    rows="4"
+                    placeholder="Questions you want to ask them..."
+                    value={formData.questionsToAsk}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Technical Topics to Review
+                  </label>
+                  <textarea
+                    name="technicalTopics"
+                    rows="3"
+                    placeholder="Technical topics or skills to prepare..."
+                    value={formData.technicalTopics}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Portfolio Projects to Showcase
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="portfolio_gtmGenerator"
+                        checked={formData.portfolioProjects.gtmGenerator}
+                        onChange={handleChange}
+                        className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">GTM Strategy Generator</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="portfolio_leadScoring"
+                        checked={formData.portfolioProjects.leadScoring}
+                        onChange={handleChange}
+                        className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">Lead Scoring Calculator</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="portfolio_abTest"
+                        checked={formData.portfolioProjects.abTest}
+                        onChange={handleChange}
+                        className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">A/B Test Analyzer</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="portfolio_customerJourney"
+                        checked={formData.portfolioProjects.customerJourney}
+                        onChange={handleChange}
+                        className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">Customer Journey Map</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Full Job Description Section */}
+            <div className="border-b pb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Full Job Description</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Job Description
+                  </label>
+                  <textarea
+                    name="jobDescription"
+                    rows="6"
+                    placeholder="Paste the full job description here..."
+                    value={formData.jobDescription}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Questions They Asked
+                  </label>
+                  <textarea
+                    name="questionsAsked"
+                    rows="4"
+                    placeholder="Track questions they asked during interviews..."
+                    value={formData.questionsAsked}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Notes & Updates Section */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
-              </label>
-              <textarea
-                name="notes"
-                rows="4"
-                placeholder="Add any notes, interview dates, follow-up actions..."
-                value={formData.notes}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Notes & Updates</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Initial Thoughts
+                  </label>
+                  <textarea
+                    name="initialThoughts"
+                    rows="3"
+                    placeholder="Your initial impressions of this opportunity..."
+                    value={formData.initialThoughts}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Follow-up Actions
+                  </label>
+                  <textarea
+                    name="followUpActions"
+                    rows="3"
+                    placeholder="Actions needed, deadlines, or reminders..."
+                    value={formData.followUpActions}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Additional Notes
+                  </label>
+                  <textarea
+                    name="notes"
+                    rows="4"
+                    placeholder="Any other notes or observations..."
+                    value={formData.notes}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-4">
@@ -852,11 +1228,11 @@ function DetailModal({ application, onClose, onEdit }) {
 
           {/* Content Grid */}
           <div className="space-y-6">
-            {/* Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Info Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {application.appliedDate && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Applied Date</h3>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">Applied Date</h3>
                   <p className="text-gray-900">{new Date(application.appliedDate).toLocaleDateString('en-GB', {
                     day: 'numeric',
                     month: 'long',
@@ -867,29 +1243,43 @@ function DetailModal({ application, onClose, onEdit }) {
 
               {application.source && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Source</h3>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">Source</h3>
                   <p className="text-gray-900">{application.source}</p>
                 </div>
               )}
 
               {application.salaryRange && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Salary Range</h3>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">Salary Range</h3>
                   <p className="text-gray-900">{application.salaryRange}</p>
                 </div>
               )}
 
-              {application.contact && (
+              {application.cvVersion && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Contact</h3>
-                  <p className="text-gray-900">{application.contact}</p>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">CV Version</h3>
+                  <p className="text-gray-900">{application.cvVersion}</p>
+                </div>
+              )}
+
+              {(application.coverLetter || application.portfolioIncluded) && (
+                <div className="md:col-span-2">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">Included</h3>
+                  <div className="flex gap-3">
+                    {application.coverLetter && (
+                      <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Cover Letter ✓</span>
+                    )}
+                    {application.portfolioIncluded && (
+                      <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Portfolio ✓</span>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
 
             {application.jobUrl && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Job URL</h3>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">Job URL</h3>
                 <a
                   href={application.jobUrl}
                   target="_blank"
@@ -901,9 +1291,150 @@ function DetailModal({ application, onClose, onEdit }) {
               </div>
             )}
 
+            {/* Role Details */}
+            {(application.keyResponsibilities || application.requiredSkills || application.whyGoodFit) && (
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Role Details</h3>
+                <div className="space-y-3">
+                  {application.keyResponsibilities && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Key Responsibilities</h4>
+                      <p className="text-gray-900 whitespace-pre-wrap">{application.keyResponsibilities}</p>
+                    </div>
+                  )}
+                  {application.requiredSkills && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Required Skills</h4>
+                      <p className="text-gray-900 whitespace-pre-wrap">{application.requiredSkills}</p>
+                    </div>
+                  )}
+                  {application.whyGoodFit && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Why Good Fit</h4>
+                      <p className="text-gray-900 whitespace-pre-wrap">{application.whyGoodFit}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Contact Information */}
+            {(application.hiringManager || application.recruiter || application.recruiterContact || application.internalContact) && (
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Contact Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {application.hiringManager && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Hiring Manager</h4>
+                      <p className="text-gray-900">{application.hiringManager}</p>
+                    </div>
+                  )}
+                  {application.recruiter && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Recruiter</h4>
+                      <p className="text-gray-900">{application.recruiter}</p>
+                    </div>
+                  )}
+                  {application.recruiterContact && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Recruiter Contact</h4>
+                      <p className="text-gray-900">{application.recruiterContact}</p>
+                    </div>
+                  )}
+                  {application.internalContact && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Internal Contact</h4>
+                      <p className="text-gray-900">{application.internalContact}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Interview Timeline */}
+            {(application.recruiterScreen || application.phoneScreen || application.firstInterview || application.secondInterview || application.finalInterview) && (
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Interview Timeline</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {application.recruiterScreen && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Recruiter Screen</h4>
+                      <p className="text-gray-900">{new Date(application.recruiterScreen).toLocaleDateString('en-GB')}</p>
+                    </div>
+                  )}
+                  {application.phoneScreen && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Phone Screen</h4>
+                      <p className="text-gray-900">{new Date(application.phoneScreen).toLocaleDateString('en-GB')}</p>
+                    </div>
+                  )}
+                  {application.firstInterview && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">First Interview</h4>
+                      <p className="text-gray-900">{new Date(application.firstInterview).toLocaleDateString('en-GB')}</p>
+                    </div>
+                  )}
+                  {application.secondInterview && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Second Interview</h4>
+                      <p className="text-gray-900">{new Date(application.secondInterview).toLocaleDateString('en-GB')}</p>
+                    </div>
+                  )}
+                  {application.finalInterview && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Final Interview</h4>
+                      <p className="text-gray-900">{new Date(application.finalInterview).toLocaleDateString('en-GB')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Interview Preparation */}
+            {(application.questionsToAsk || application.technicalTopics || (application.portfolioProjects && Object.values(application.portfolioProjects).some(v => v))) && (
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Interview Preparation</h3>
+                <div className="space-y-3">
+                  {application.questionsToAsk && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Questions to Ask Them</h4>
+                      <div className="bg-purple-50 rounded-lg p-3">
+                        <p className="text-gray-900 whitespace-pre-wrap">{application.questionsToAsk}</p>
+                      </div>
+                    </div>
+                  )}
+                  {application.technicalTopics && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Technical Topics to Review</h4>
+                      <p className="text-gray-900 whitespace-pre-wrap">{application.technicalTopics}</p>
+                    </div>
+                  )}
+                  {application.portfolioProjects && Object.values(application.portfolioProjects).some(v => v) && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Portfolio Projects to Showcase</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {application.portfolioProjects.gtmGenerator && (
+                          <span className="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded">GTM Strategy Generator</span>
+                        )}
+                        {application.portfolioProjects.leadScoring && (
+                          <span className="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded">Lead Scoring Calculator</span>
+                        )}
+                        {application.portfolioProjects.abTest && (
+                          <span className="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded">A/B Test Analyzer</span>
+                        )}
+                        {application.portfolioProjects.customerJourney && (
+                          <span className="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded">Customer Journey Map</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Job Description */}
             {application.jobDescription && (
-              <div>
+              <div className="border-t pt-4">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Job Description</h3>
                 <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
                   <p className="text-gray-900 whitespace-pre-wrap">{application.jobDescription}</p>
@@ -913,7 +1444,7 @@ function DetailModal({ application, onClose, onEdit }) {
 
             {/* Questions They Asked */}
             {application.questionsAsked && (
-              <div>
+              <div className="border-t pt-4">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Interview Questions They Asked</h3>
                 <div className="bg-blue-50 rounded-lg p-4">
                   <p className="text-gray-900 whitespace-pre-wrap">{application.questionsAsked}</p>
@@ -921,22 +1452,31 @@ function DetailModal({ application, onClose, onEdit }) {
               </div>
             )}
 
-            {/* My Questions */}
-            {application.myQuestions && (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">My Questions to Ask</h3>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <p className="text-gray-900 whitespace-pre-wrap">{application.myQuestions}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Notes */}
-            {application.notes && (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Notes</h3>
-                <div className="bg-yellow-50 rounded-lg p-4">
-                  <p className="text-gray-900 whitespace-pre-wrap">{application.notes}</p>
+            {/* Notes & Updates */}
+            {(application.initialThoughts || application.followUpActions || application.notes) && (
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Notes & Updates</h3>
+                <div className="space-y-3">
+                  {application.initialThoughts && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Initial Thoughts</h4>
+                      <p className="text-gray-900 whitespace-pre-wrap">{application.initialThoughts}</p>
+                    </div>
+                  )}
+                  {application.followUpActions && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Follow-up Actions</h4>
+                      <div className="bg-yellow-50 rounded-lg p-3">
+                        <p className="text-gray-900 whitespace-pre-wrap">{application.followUpActions}</p>
+                      </div>
+                    </div>
+                  )}
+                  {application.notes && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Additional Notes</h4>
+                      <p className="text-gray-900 whitespace-pre-wrap">{application.notes}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
